@@ -5,6 +5,7 @@
 
 (defparameter *data* (loop for x from -20 to 20 collect (cons x (expt x 2))))
 (defparameter *data2* (loop for x from (* -2 pi) to (* 2 pi) by (/ pi 20) collect (cons x (sin x))))
+(defparameter *random* (loop for x below 50 collect (cons x (random (1+ x)))))
 
 (defparameter *strange-attractor*
   (let* ((x .1) y
@@ -34,38 +35,49 @@
    (%stroke-width :initarg :stroke-width :reader graph-stroke-width)))
 
 (defclass plot-zone (clim3:monochrome)
-  ((%graphs :initarg :graphs :accessor plot-zone-graphs))
+  ((%graphs :initarg :graphs :accessor plot-zone-graphs)
+   (%xmin :initarg :xmin :accessor plot-zone-xmin)
+   (%xmax :initarg :xmax :accessor plot-zone-xmax)
+   (%ymin :initarg :ymin :accessor plot-zone-ymin)
+   (%ymax :initarg :ymax :accessor plot-zone-ymax))
   (:default-initargs :hsprawl (clim3-sprawl:sprawl 800 800 nil)
 		     :vsprawl (clim3-sprawl:sprawl 600 600 nil)))
 
 (defmethod clim3-ext:paint ((zone plot-zone))
-  (let ((width (clim3:width zone))
-        (height (clim3:height zone))
-        (graphs (plot-zone-graphs zone)))
+  (with-accessors ((width clim3:width)
+                   (height clim3:height)
+                   (graphs plot-zone-graphs)
+                   (min-x plot-zone-xmin)
+                   (max-x plot-zone-xmax)
+                   (min-y plot-zone-ymin)
+                   (max-y plot-zone-ymax)) zone
     (dolist (graph graphs)
       (let ((data (graph-data graph))
             (color (graph-color graph))
             (stroke-width (graph-stroke-width graph)))
-        (multiple-value-bind (min-x min-y max-x max-y) (min-max data)
-          (clim3:with-area (0 0 width height)
-            (let ((scaled-data (mapcar #'(lambda (p)
-                                           (cons (scale (car p) min-x max-x width)
-                                                 (scale (cdr p) min-y max-y height))) data)))
-              (clim3:paint-path scaled-data color stroke-width))))))))
+        (clim3:with-area (0 0 width height)
+          (let ((scaled-data (mapcar #'(lambda (p)
+                                         (cons (scale (car p) min-x max-x width)
+                                               (scale (cdr p) min-y max-y height))) data)))
+            (clim3:paint-path scaled-data color stroke-width)))))))
 
 (defun make-graph (data color stroke-width)
   (make-instance 'graph :data data :color color :stroke-width stroke-width))
 
-(defun make-plot (&optional graphs)
-  (make-instance 'plot-zone :graphs (when (and graphs (listp graphs)) graphs)))
+(defun make-plot (xmin xmax ymin ymax &optional graphs)
+  (make-instance 'plot-zone :xmin xmin
+                            :xmax xmax
+                            :ymin ymin
+                            :ymax ymax
+                            :graphs graphs))
 
 (defun run ()
   (let* ((port (clim3:make-port :clx-framebuffer))
          (title (clim3-text:text "Mon graphique" *text-style* *foreground*))
-         (graph-1 (make-graph (loop for x below 50 collect (cons x (random (1+ x)))) *foreground* 1.0))
+         (graph-1 (make-graph *random* *foreground* 1.0))
          (graph-2 (make-graph *strange-attractor* (clim3:make-color 0 0 0) 0.1))
          (graph-3 (make-graph *data2* (clim3:make-color 1 0 0) 1.0))
-         (plot (make-plot (list graph-1 graph-2 graph-3)))
+         (plot (make-plot 0 50 0 50 (list graph-1 graph-2 graph-3)))
          (root (clim3:vbox* title plot)))
     (clim3:connect root port)
     (let ((clim3:*port* port))
