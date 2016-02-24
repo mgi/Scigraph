@@ -3,8 +3,8 @@
 (defparameter *foreground* (clim3:make-color 0.4d0 0.3d0 0.8d0))
 (defparameter *text-style* (clim3:text-style :camfer :sans :roman 20))
 
-(defparameter *data* (loop for x from -20 to 20 collect (cons x (expt x 2))))
-(defparameter *data2* (loop for x from (* -2 pi) to (* 2 pi) by (/ pi 20) collect (cons x (sin x))))
+(defparameter *exp* (loop for x from -20 to 20 by 0.1 collect (cons x (expt x 2))))
+(defparameter *sin* (loop for x from (* -2 pi) to (* 2 pi) by (/ pi 20) collect (cons x (sin x))))
 (defparameter *random* (loop for x below 50 collect (cons x (random (1+ x)))))
 
 (defparameter *strange-attractor*
@@ -29,10 +29,26 @@
 (defun scale (x min max size)
   (* (- x min) (/ size (- max min))))
 
+(defun filter-scale (points min-x max-x min-y max-y width height)
+  (loop with dw = (/ width (- max-x min-x))
+        with dh = (/ height (- max-y min-y))
+        for p in points
+        when (let* ((x (car p))
+                    (y (cdr p))
+                    (sx (* (- x min-x) dw))
+                    (sy (* (- y min-y) dh)))
+               (when (and (>= sx 0)
+                          (<= sx width)
+                          (>= sy 0)
+                          (<= sy height))
+                 (cons sx sy)))
+          collect it))
+
 (defclass graph ()
   ((%data :initarg :data :reader graph-data)
    (%color :initarg :color :reader graph-color)
-   (%stroke-width :initarg :stroke-width :reader graph-stroke-width)))
+   (%stroke-width :initarg :stroke-width :reader graph-stroke-width)
+   (%legend :initarg :legend :reader graph-legend)))
 
 (defclass plot-zone (clim3:monochrome)
   ((%graphs :initarg :graphs :accessor plot-zone-graphs)
@@ -52,17 +68,16 @@
                    (min-y plot-zone-ymin)
                    (max-y plot-zone-ymax)) zone
     (dolist (graph graphs)
-      (let ((data (graph-data graph))
-            (color (graph-color graph))
-            (stroke-width (graph-stroke-width graph)))
+      (with-accessors ((data graph-data)
+                       (color graph-color)
+                       (stroke-width graph-stroke-width)
+                       (legend graph-legend)) graph
         (clim3:with-area (0 0 width height)
-          (let ((scaled-data (mapcar #'(lambda (p)
-                                         (cons (scale (car p) min-x max-x width)
-                                               (scale (cdr p) min-y max-y height))) data)))
-            (clim3:paint-path scaled-data color stroke-width)))))))
+          (clim3:paint-path (filter-scale data min-x max-x min-y  max-y width height)
+                            color stroke-width))))))
 
-(defun make-graph (data color stroke-width)
-  (make-instance 'graph :data data :color color :stroke-width stroke-width))
+(defun make-graph (data color stroke-width legend)
+  (make-instance 'graph :data data :color color :stroke-width stroke-width :legend legend))
 
 (defun make-plot (xmin xmax ymin ymax &optional graphs)
   (make-instance 'plot-zone :xmin xmin
@@ -74,10 +89,11 @@
 (defun run ()
   (let* ((port (clim3:make-port :clx-framebuffer))
          (title (clim3-text:text "Mon graphique" *text-style* *foreground*))
-         (graph-1 (make-graph *random* *foreground* 1.0))
-         (graph-2 (make-graph *strange-attractor* (clim3:make-color 0 0 0) 0.1))
-         (graph-3 (make-graph *data2* (clim3:make-color 1 0 0) 1.0))
-         (plot (make-plot 0 50 0 50 (list graph-1 graph-2 graph-3)))
+         (graph-1 (make-graph *random* *foreground* 1.0 "Random"))
+         (graph-2 (make-graph *strange-attractor* (clim3:make-color 0 0 0) 0.1 "Strange attractor"))
+         (graph-3 (make-graph *sin* (clim3:make-color 1 0 0) 1.0 "Sinus"))
+         (graph-4 (make-graph *exp* (clim3:make-color 0 0.5 0) 1.0 "Exponentielle"))
+         (plot (make-plot (- (* 2 pi)) (* 2 pi) -2 2 (list graph-3 graph-1 graph-4)))
          (root (clim3:vbox* title plot)))
     (clim3:connect root port)
     (let ((clim3:*port* port))
