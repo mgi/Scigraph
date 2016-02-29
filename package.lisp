@@ -1,3 +1,4 @@
 (defpackage :clim3-scigraph
   (:nicknames "SCIGRAPH")
-  (:use :common-lisp))
+  (:use :common-lisp)
+  (:export #:run))

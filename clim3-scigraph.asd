@@ -5,4 +5,6 @@
   :serial t
   :components
   ((:file "package")
+   (:file "graph")
+   (:file "equation")
    (:file "scigraph")))

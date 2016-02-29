@@ -43,12 +43,6 @@
                    (setf last-in nil))
                  (setf last-out sp))))))))
 
-(defclass graph ()
-  ((%data :initarg :data :reader graph-data)
-   (%color :initarg :color :reader graph-color)
-   (%stroke-width :initarg :stroke-width :reader graph-stroke-width)
-   (%legend :initarg :legend :reader graph-legend)))
-
 (defclass plot-zone (clim3:monochrome)
   ((%graphs :initarg :graphs :accessor plot-zone-graphs)
    (%xmin :initarg :xmin :accessor plot-zone-xmin)
@@ -67,16 +61,12 @@
                    (min-y plot-zone-ymin)
                    (max-y plot-zone-ymax)) zone
     (dolist (graph graphs)
-      (with-accessors ((data graph-data)
-                       (color graph-color)
-                       (stroke-width graph-stroke-width)
-                       (legend graph-legend)) graph
+      (with-accessors ((data data)
+                       (color color)
+                       (thickness thickness)) graph
         (clim3:with-area (0 0 width height)
           (clim3:paint-path (filter-scale data min-x max-x min-y max-y width height)
-                            color stroke-width))))))
-
-(defun make-graph (data color stroke-width legend)
-  (make-instance 'graph :data data :color color :stroke-width stroke-width :legend legend))
+                            color thickness))))))
 
 (defun make-plot (xmin xmax ymin ymax &optional graphs)
   (make-instance 'plot-zone :xmin xmin
@@ -88,11 +78,15 @@
 (defun run ()
   (let* ((port (clim3:make-port :clx-framebuffer))
          (title (clim3-text:text "Mon graphique" *text-style* *foreground*))
-         (graph-1 (make-graph *random* *foreground* 1.0 "Random"))
-         (graph-2 (make-graph *strange-attractor* (clim3:make-color 0 0 0) 0.1 "Strange attractor"))
-         (graph-3 (make-graph *sin* (clim3:make-color 1 0 0) 1.5 "Sinus"))
-         (graph-4 (make-graph *exp* (clim3:make-color 0 0.5 0) 1.0 "Exponentielle"))
-         (plot (make-plot (- (* 2 pi)) (* 2 pi) -1.5 1.5 (list graph-3 graph-1 graph-4)))
+         (x-min (- (* 2 pi)))
+         (x-max (* 2 pi))
+         (graph-1 (make-graph *random* *foreground* 1))
+         (graph-2 (make-graph *strange-attractor* (clim3:make-color 0 0 0) 0.1))
+         (graph-3 (make-x-equation '(lambda (x) (sin x))
+                                   x-min x-max (/ (- x-max x-min) 100)
+                                   (clim3:make-color 1 0 0) 1.5))
+         (graph-4 (make-graph *exp* (clim3:make-color 0 0.5 0) 1))
+         (plot (make-plot x-min x-max -1.5 1.5 (list graph-3 graph-1 graph-4)))
          (root (clim3:vbox* title plot)))
     (clim3:connect root port)
     (unwind-protect
