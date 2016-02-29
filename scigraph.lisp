@@ -31,12 +31,12 @@
 
 (defun filter-scale (points min-x max-x min-y max-y width height)
   (loop with dw = (/ width (- max-x min-x))
-        with dh = (/ height (- max-y min-y))
+        with dh = (/ height (- min-y max-y))
         for p in points
         when (let* ((x (car p))
                     (y (cdr p))
                     (sx (* (- x min-x) dw))
-                    (sy (* (- y min-y) dh)))
+                    (sy (* (- y max-y) dh)))
                (when (and (>= sx 0)
                           (<= sx width)
                           (>= sy 0)
@@ -59,6 +59,11 @@
   (:default-initargs :hsprawl (clim3-sprawl:sprawl 800 800 nil)
 		     :vsprawl (clim3-sprawl:sprawl 600 600 nil)))
 
+(defclass path-zone (clim3:monochrome)
+  ((%path :initarg :path :accessor path-zone-path))
+  (:default-initargs :hsprawl (clim3-sprawl:sprawl 300 300 nil)
+                     :vsprawl (clim3-sprawl:sprawl 300 300 nil)))
+
 (defmethod clim3-ext:paint ((zone plot-zone))
   (with-accessors ((width clim3:width)
                    (height clim3:height)
@@ -73,8 +78,17 @@
                        (stroke-width graph-stroke-width)
                        (legend graph-legend)) graph
         (clim3:with-area (0 0 width height)
-          (clim3:paint-path (filter-scale data min-x max-x min-y  max-y width height)
+          (clim3:paint-path (filter-scale data min-x max-x min-y max-y width height)
                             color stroke-width))))))
+
+(defmethod clim3-ext:paint ((zone path-zone))
+  (with-accessors ((width clim3:width)
+                   (height clim3:height)
+                   (color clim3:color)
+                   (path path-zone-path)) zone
+    (when path
+      (clim3:with-area (0 0 width height)
+        (clim3:paint-path path color 1.0)))))
 
 (defun make-graph (data color stroke-width legend)
   (make-instance 'graph :data data :color color :stroke-width stroke-width :legend legend))
@@ -91,15 +105,30 @@
          (title (clim3-text:text "Mon graphique" *text-style* *foreground*))
          (graph-1 (make-graph *random* *foreground* 1.0 "Random"))
          (graph-2 (make-graph *strange-attractor* (clim3:make-color 0 0 0) 0.1 "Strange attractor"))
-         (graph-3 (make-graph *sin* (clim3:make-color 1 0 0) 1.0 "Sinus"))
+         (graph-3 (make-graph *sin* (clim3:make-color 1 0 0) 1.5 "Sinus"))
          (graph-4 (make-graph *exp* (clim3:make-color 0 0.5 0) 1.0 "Exponentielle"))
-         (plot (make-plot (- (* 2 pi)) (* 2 pi) -2 2 (list graph-3 graph-1 graph-4)))
+         (plot (make-plot (- (* 2 pi)) (* 2 pi) -1.5 1.5 (list graph-3 graph-1 graph-4)))
          (root (clim3:vbox* title plot)))
     (clim3:connect root port)
-    (let ((clim3:*port* port))
-      (loop for keystroke = (clim3:read-keystroke)
-	    until (eql (car keystroke) #\q)))
-    (clim3:disconnect root port)))
+    (unwind-protect
+         (let ((clim3:*port* port))
+           (loop for keystroke = (clim3:read-keystroke)
+                 until (eql (car keystroke) #\q)))
+      (clim3:disconnect root port))))
+
+(defun test-path ()
+  (let* ((port (clim3:make-port :clx-framebuffer))
+         (extreme-path (loop for y = 10000 then (- y)
+                             for x below 600 by 100 collect (cons x y)))
+         (zone (make-instance 'path-zone :path extreme-path
+                                         :color (clim3:make-color 0 0 0)))
+         (root (clim3:vbox* zone)))
+    (clim3:connect root port)
+    (unwind-protect
+         (let ((clim3:*port* port))
+           (loop for keystroke = (clim3:read-keystroke)
+                 until (eql (car keystroke) #\q)))
+      (clim3:disconnect root port))))
 
 (defun display-font (foundry family face size &optional string)
   (let* ((style (clim3:text-style foundry family face size))
