@@ -1,4 +1,4 @@
-(in-package :scigraph)
+(in-package :clim3-scigraph)
 
 (defparameter *foreground* (clim3:make-color 0.4d0 0.3d0 0.8d0))
 (defparameter *text-style* (clim3:text-style :camfer :sans :roman 20))

@@ -1,6 +1,6 @@
 (cl:in-package #:asdf-user)
 
-(defsystem :scigraph
+(defsystem :clim3-scigraph
   :depends-on (:climatis)
   :serial t
   :components
