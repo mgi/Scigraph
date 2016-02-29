@@ -29,7 +29,7 @@
                                  x-min x-max (/ (- x-max x-min) 100)
                                  (clim3:make-color 1 0 0) 1.5))
          (graph-4 (make-graph *exp* (clim3:make-color 0 0.5 0) 1))
-         (plot (make-plot x-min x-max -1.5 1.5 (list graph-3 graph-1 graph-4)))
+         (plot (make-grid-plot x-min x-max -1.5 1.5 (/ pi 4) .2 (list graph-3 graph-1 graph-4)))
          (root (clim3:vbox* title plot)))
     (clim3:connect root port)
     (unwind-protect
