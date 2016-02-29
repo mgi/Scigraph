@@ -7,4 +7,5 @@
   ((:file "package")
    (:file "graph")
    (:file "equation")
-   (:file "scigraph")))
+   (:file "plot")
+   (:file "example")))
