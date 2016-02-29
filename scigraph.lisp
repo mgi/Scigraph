@@ -26,23 +26,30 @@
         maximize y into max-y
         finally (return (values min-x min-y max-x max-y))))
 
-(defun scale (x min max size)
-  (* (- x min) (/ size (- max min))))
-
 (defun filter-scale (points min-x max-x min-y max-y width height)
-  (loop with dw = (/ width (- max-x min-x))
-        with dh = (/ height (- min-y max-y))
-        for p in points
-        when (let* ((x (car p))
-                    (y (cdr p))
-                    (sx (* (- x min-x) dw))
-                    (sy (* (- y max-y) dh)))
-               (when (and (>= sx 0)
-                          (<= sx width)
-                          (>= sy 0)
-                          (<= sy height))
-                 (cons sx sy)))
-          collect it))
+  (let ((dw (/ width (- max-x min-x)))
+        (dh (/ height (- min-y max-y)))
+        last-out last-in res)
+    (flet ((inside-p (p)
+             (let ((x (car p))
+                   (y (cdr p)))
+               (and (>= x 0) (<= x width)
+                    (>= y 0) (<= y height))))
+           (scale (p) (cons (* (- (car p) min-x) dw)
+                            (* (- (cdr p) max-y) dh))))
+      (dolist (p points (reverse res))
+        (let ((sp (scale p)))
+          (cond ((inside-p sp)
+                 (when last-out
+                   (push last-out res)
+                   (setf last-out nil))
+                 (push sp res)
+                 (setf last-in sp))
+                (t
+                 (when last-in
+                   (push sp res)
+                   (setf last-in nil))
+                 (setf last-out sp))))))))
 
 (defclass graph ()
   ((%data :initarg :data :reader graph-data)
