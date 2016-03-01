@@ -50,7 +50,7 @@
                        (color color)
                        (thickness thickness)) graph
         (clim3:with-area (0 0 width height)
-          (clim3:paint-path (filter-scale data min-x max-x min-y max-y width height)
+          (clim3:paint-paths (list (filter-scale data min-x max-x min-y max-y width height))
                             color thickness))))))
 
 (defun make-plot (xmin xmax ymin ymax &optional graphs)
@@ -83,30 +83,35 @@
                    (step-x grid-plot-step-x)
                    (step-y grid-plot-step-y)) zone
     (clim3:with-area (0 0 width height)
-      (let ((dw (/ width (- max-x min-x)))
-            (dh (/ height (- min-y max-y)))
-            (color (clim3:make-color 0.2 0.2 0.2)))
-        ;; 0 to x-max
-        (do ((x 0 (+ x step-x)))
+      (let* ((dw (/ width (- max-x min-x)))
+             (dh (/ height (- min-y max-y)))
+             (color (clim3:make-color 0.2 0.2 0.2))
+             (sx0 (scale 0 min-x dw))
+             (sy0 (scale 0 max-y dh))
+             (axes (list (list (cons sx0 0)
+                               (cons sx0 height))
+                         (list (cons 0 sy0)
+                               (cons width (1+ sy0)))))
+             grid)
+        ;; ]0 .. x-max]
+        (do ((x step-x (+ x step-x)))
             ((> x max-x))
           (let ((sx (scale x min-x dw)))
-            (clim3:paint-path (list (cons sx 0) (cons sx height))
-                              color 0.5)))
-        ;; 0 to x-min
+            (push (list (cons sx 0) (cons sx height)) grid)))
+        ;; ]0 .. x-min]
         (do ((x (- step-x) (- x step-x)))
             ((< x min-x))
           (let ((sx (scale x min-x dw)))
-            (clim3:paint-path (list (cons sx 0) (cons sx height))
-                              color 0.5)))
-        ;; 0 to y-max
-        (do ((y 0 (+ y step-y)))
+            (push (list (cons sx 0) (cons sx height)) grid)))
+        ;; ]0 .. y-max]
+        (do ((y step-y (+ y step-y)))
             ((> y max-y))
           (let ((sy (scale y max-y dh)))
-            (clim3:paint-path (list (cons 0 sy) (cons width sy))
-                              color 0.5)))
-        ;; 0 to y-min
+            (push (list (cons 0 sy) (cons width (1+ sy))) grid)))
+        ;; ]0 .. y-min]
         (do ((y (- step-y) (- y step-y)))
             ((< y min-y))
           (let ((sy (scale y max-y dh)))
-            (clim3:paint-path (list (cons 0 sy) (cons width sy))
-                              color 0.5)))))))
+            (push (list (cons 0 sy) (cons width (1+ sy))) grid)))
+        (clim3:paint-paths axes color 1.5)
+        (clim3:paint-paths grid color 0.5)))))
