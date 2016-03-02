@@ -28,23 +28,23 @@
                    (setf last-in nil))
                  (setf last-out sp))))))))
 
-(defclass plot-zone (clim3:monochrome)
-  ((%graphs :initarg :graphs :accessor plot-zone-graphs)
-   (%xmin :initarg :xmin :accessor plot-zone-xmin)
-   (%xmax :initarg :xmax :accessor plot-zone-xmax)
-   (%ymin :initarg :ymin :accessor plot-zone-ymin)
-   (%ymax :initarg :ymax :accessor plot-zone-ymax))
+(defclass plot (clim3:monochrome)
+  ((%graphs :initarg :graphs :accessor plot-graphs)
+   (%xmin :initarg :xmin :accessor plot-xmin)
+   (%xmax :initarg :xmax :accessor plot-xmax)
+   (%ymin :initarg :ymin :accessor plot-ymin)
+   (%ymax :initarg :ymax :accessor plot-ymax))
   (:default-initargs :hsprawl (clim3-sprawl:sprawl 800 800 nil)
 		     :vsprawl (clim3-sprawl:sprawl 600 600 nil)))
 
-(defmethod clim3-ext:paint ((zone plot-zone))
+(defmethod clim3-ext:paint ((zone plot))
   (with-accessors ((width clim3:width)
                    (height clim3:height)
-                   (graphs plot-zone-graphs)
-                   (min-x plot-zone-xmin)
-                   (max-x plot-zone-xmax)
-                   (min-y plot-zone-ymin)
-                   (max-y plot-zone-ymax)) zone
+                   (graphs plot-graphs)
+                   (min-x plot-xmin)
+                   (max-x plot-xmax)
+                   (min-y plot-ymin)
+                   (max-y plot-ymax)) zone
     (dolist (graph graphs)
       (with-accessors ((data data)
                        (color color)
@@ -54,13 +54,13 @@
                             color thickness))))))
 
 (defun make-plot (xmin xmax ymin ymax &optional graphs)
-  (make-instance 'plot-zone :xmin xmin
+  (make-instance 'plot :xmin xmin
                             :xmax xmax
                             :ymin ymin
                             :ymax ymax
                             :graphs graphs))
 
-(defclass grid-plot (plot-zone)
+(defclass grid-plot (plot)
   ((%xstep :initarg :xstep :accessor grid-plot-step-x)
    (%ystep :initarg :ystep :accessor grid-plot-step-y)))
 
@@ -76,10 +76,10 @@
 (defmethod clim3-ext:paint :before ((zone grid-plot))
   (with-accessors ((width clim3:width)
                    (height clim3:height)
-                   (min-x plot-zone-xmin)
-                   (max-x plot-zone-xmax)
-                   (min-y plot-zone-ymin)
-                   (max-y plot-zone-ymax)
+                   (min-x plot-xmin)
+                   (max-x plot-xmax)
+                   (min-y plot-ymin)
+                   (max-y plot-ymax)
                    (step-x grid-plot-step-x)
                    (step-y grid-plot-step-y)) zone
     (clim3:with-area (0 0 width height)

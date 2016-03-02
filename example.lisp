@@ -21,10 +21,10 @@
 (defun zoom-in (plot)
   (with-accessors ((width clim3:width)
                    (height clim3:height)
-                   (min-x plot-zone-xmin)
-                   (max-x plot-zone-xmax)
-                   (min-y plot-zone-ymin)
-                   (max-y plot-zone-ymax)) plot
+                   (min-x plot-xmin)
+                   (max-x plot-xmax)
+                   (min-y plot-ymin)
+                   (max-y plot-ymax)) plot
     (let* ((dx (- max-x min-x))
            (dy (- max-y min-y))
            (remove-x (/ dx 10))
