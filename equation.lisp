@@ -3,25 +3,25 @@
 (defclass equation (graph)
   ((%eqn :initarg :equation :reader equation)
    (%fun :initarg :func :reader func)
-   (%min :initform 0 :initarg :min :reader minimum)
-   (%max :initform 100 :initarg :max :reader maximum)
-   (%increment :initform 1 :initarg :increment :reader increment)))
+   (%plot :initform nil :accessor plot)
+   (%resolution :initarg :resolution :reader resolution)))
 
-(defmethod initialize-instance :after ((object equation) &key &allow-other-keys)
+(defmethod update-data ((self equation))
   (with-accessors ((func func)
-                   (min minimum)
-                   (max maximum)
-                   (increment increment)
-                   (data data)) object
-    (setf data (loop for x from min to max by increment
-                     collect (cons x (funcall func x))))))
+                   (resolution resolution)
+                   (data data)
+                   (plot plot)) self
+    (when plot
+      (with-accessors ((min-x plot-xmin)
+                       (max-x plot-xmax)) plot
+        (let ((dx (/ (- max-x min-x) resolution)))
+          (setf data (loop for x from min-x to max-x by dx
+                           collect (cons x (funcall func x)))))))))
 
-(defun make-equation (lambda-equation min max increment color thickness)
+(defun make-equation (lambda-equation color thickness &optional (resolution 100))
   (make-instance 'equation
                  :equation lambda-equation
                  :func (compile nil lambda-equation)
-                 :min min
-                 :max max
-                 :increment increment
+                 :resolution resolution
                  :color color
                  :thickness thickness))

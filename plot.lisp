@@ -29,7 +29,7 @@
                  (setf last-out sp))))))))
 
 (defclass plot (clim3:monochrome)
-  ((%graphs :initarg :graphs :accessor plot-graphs)
+  ((%graphs :initform nil :initarg :graphs :accessor plot-graphs)
    (%xmin :initarg :xmin :accessor plot-xmin)
    (%xmax :initarg :xmax :accessor plot-xmax)
    (%ymin :initarg :ymin :accessor plot-ymin)
@@ -53,16 +53,21 @@
           (clim3:paint-paths (list (clip-scale data min-x max-x min-y max-y width height))
                             color thickness))))))
 
-(defun make-plot (xmin xmax ymin ymax &optional graphs)
+(defun make-plot (xmin xmax ymin ymax)
   (make-instance 'plot :xmin xmin
                        :xmax xmax
                        :ymin ymin
-                       :ymax ymax
-                       :graphs graphs))
+                       :ymax ymax))
 
-(defun push-graph (plot graph)
+(defgeneric push-graph (plot graph))
+
+(defmethod push-graph (plot (graph graph))
   (with-accessors ((graphs plot-graphs)) plot
     (push graph graphs)))
+
+(defmethod push-graph :after (plot (graph equation))
+  (setf (plot graph) plot)
+  (update-data graph))
 
 (defun pop-graph (plot)
   (with-accessors ((graphs plot-graphs)) plot
@@ -72,14 +77,13 @@
   ((%xstep :initarg :xstep :accessor grid-plot-step-x)
    (%ystep :initarg :ystep :accessor grid-plot-step-y)))
 
-(defun make-grid-plot (xmin xmax ymin ymax xstep ystep &optional graphs)
+(defun make-grid-plot (xmin xmax ymin ymax xstep ystep)
   (make-instance 'grid-plot :xmin xmin
                             :xmax xmax
                             :ymin ymin
                             :ymax ymax
                             :xstep xstep
-                            :ystep ystep
-                            :graphs graphs))
+                            :ystep ystep))
 
 (defmethod clim3-ext:paint :before ((zone grid-plot))
   (with-accessors ((width clim3:width)
