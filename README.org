@@ -1,0 +1,15 @@
+* Scigraph
+
+A try to reimplement Scigraph (see [fn:1]) on top of Robert Strandh's
+CLIMatis (see [fn:2])
+
+Not much here yet, you can try this:
+#+BEGIN_SRC lisp
+(ql:quickload 'clim3-scigraph)
+(scigraph:run)
+#+END_SRC
+
+** Footnotes
+
+[fn:1] https://github.com/robert-strandh/McCLIM/tree/master/Apps/Scigraph
+[fn:2] https://github.com/robert-strandh/CLIMatis
