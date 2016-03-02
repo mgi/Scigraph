@@ -18,6 +18,26 @@
       (setf (nth i res) (cons x y)))
     res))
 
+(defun zoom-in (plot)
+  (with-accessors ((width clim3:width)
+                   (height clim3:height)
+                   (min-x plot-zone-xmin)
+                   (max-x plot-zone-xmax)
+                   (min-y plot-zone-ymin)
+                   (max-y plot-zone-ymax)) plot
+    (let* ((dx (- max-x min-x))
+           (dy (- max-y min-y))
+           (remove-x (/ dx 10))
+           (remove-y (/ dy 10))
+           (new-max-x (- max-x remove-x))
+           (new-min-x (+ min-x remove-x))
+           (new-max-y (- max-y remove-y))
+           (new-min-y (+ min-y remove-y)))
+      (setf min-x new-min-x
+            max-x new-max-x
+            min-y new-min-y
+            max-y new-max-y))))
+
 (defun run ()
   (let* ((port (clim3:make-port :clx-framebuffer))
          (title (clim3-text:text "Mon graphique" *text-style* *foreground*))
@@ -30,10 +50,13 @@
                                  (clim3:make-color 1 0 0) 1.5))
          (graph-4 (make-graph *exp* (clim3:make-color 0 0.5 0) 1))
          (plot (make-grid-plot x-min x-max -1.5 1.5 (/ pi 4) .2 (list graph-3 graph-1 graph-4)))
+         (plot2 (make-plot x-min x-max -1.5 1.5 (list graph-3)))
          (root (clim3:vbox* title plot)))
     (clim3:connect root port)
     (unwind-protect
          (let ((clim3:*port* port))
            (loop for keystroke = (clim3:read-keystroke)
+                 do (case (car keystroke)
+                      (#\+ (zoom-in plot) (clim3-ext:repaint port)))
                  until (eql (car keystroke) #\q)))
       (clim3:disconnect root port))))

@@ -3,7 +3,7 @@
 (defun scale (x boundary size)
   (* (- x boundary) size))
 
-(defun filter-scale (points min-x max-x min-y max-y width height)
+(defun clip-scale (points min-x max-x min-y max-y width height)
   (let ((dw (/ width (- max-x min-x)))
         (dh (/ height (- min-y max-y)))
         last-out last-in res)
@@ -50,7 +50,7 @@
                        (color color)
                        (thickness thickness)) graph
         (clim3:with-area (0 0 width height)
-          (clim3:paint-paths (list (filter-scale data min-x max-x min-y max-y width height))
+          (clim3:paint-paths (list (clip-scale data min-x max-x min-y max-y width height))
                             color thickness))))))
 
 (defun make-plot (xmin xmax ymin ymax &optional graphs)
@@ -91,7 +91,7 @@
              (axes (list (list (cons sx0 0)
                                (cons sx0 height))
                          (list (cons 0 sy0)
-                               (cons width (1+ sy0)))))
+                               (cons width sy0))))
              grid)
         ;; ]0 .. x-max]
         (do ((x step-x (+ x step-x)))
@@ -107,11 +107,11 @@
         (do ((y step-y (+ y step-y)))
             ((> y max-y))
           (let ((sy (scale y max-y dh)))
-            (push (list (cons 0 sy) (cons width (1+ sy))) grid)))
+            (push (list (cons 0 sy) (cons width sy)) grid)))
         ;; ]0 .. y-min]
         (do ((y (- step-y) (- y step-y)))
             ((< y min-y))
           (let ((sy (scale y max-y dh)))
-            (push (list (cons 0 sy) (cons width (1+ sy))) grid)))
+            (push (list (cons 0 sy) (cons width sy)) grid)))
         (clim3:paint-paths axes color 1.5)
         (clim3:paint-paths grid color 0.5)))))
