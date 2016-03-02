@@ -13,4 +13,8 @@
 (defclass graph (raw-graph graph-style-mixin simple-statistics-mixin) ())
 
 (defun make-graph (data color thickness)
-  (make-instance 'graph :data data :color color :thickness thickness))
+  (make-instance 'graph :data (make-array (length data)
+                                          :adjustable t
+                                          :fill-pointer t
+                                          :initial-contents data)
+                        :color color :thickness thickness))

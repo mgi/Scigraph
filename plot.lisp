@@ -14,8 +14,8 @@
                     (>= y 0) (<= y height))))
            (scale-point (p) (cons (scale (car p) min-x dw)
                                   (scale (cdr p) max-y dh))))
-      (dolist (p points (reverse res))
-        (let ((sp (scale-point p)))
+      (dotimes (i (length points) (reverse res))
+        (let ((sp (scale-point (elt points i))))
           (cond ((inside-p sp)
                  (when last-out
                    (push last-out res)
@@ -55,10 +55,18 @@
 
 (defun make-plot (xmin xmax ymin ymax &optional graphs)
   (make-instance 'plot :xmin xmin
-                            :xmax xmax
-                            :ymin ymin
-                            :ymax ymax
-                            :graphs graphs))
+                       :xmax xmax
+                       :ymin ymin
+                       :ymax ymax
+                       :graphs graphs))
+
+(defun push-graph (plot graph)
+  (with-accessors ((graphs plot-graphs)) plot
+    (push graph graphs)))
+
+(defun pop-graph (plot)
+  (with-accessors ((graphs plot-graphs)) plot
+    (pop graphs)))
 
 (defclass grid-plot (plot)
   ((%xstep :initarg :xstep :accessor grid-plot-step-x)

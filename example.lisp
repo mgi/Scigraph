@@ -52,6 +52,7 @@
          (plot (make-grid-plot x-min x-max -1.5 1.5 (/ pi 4) .2 (list graph-3 graph-1 graph-4)))
          (plot2 (make-plot x-min x-max -1.5 1.5 (list graph-3)))
          (root (clim3:vbox* title plot)))
+    (push-graph plot graph-2)
     (clim3:connect root port)
     (unwind-protect
          (let ((clim3:*port* port))
