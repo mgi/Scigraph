@@ -15,7 +15,7 @@
       (with-accessors ((min-x plot-xmin)
                        (max-x plot-xmax)) plot
         (let ((dx (/ (- max-x min-x) resolution)))
-          (setf data (loop for x from min-x to max-x by dx
+          (setf data (loop for x from min-x below (+ max-x dx) by dx
                            collect (cons x (funcall func x)))))))))
 
 (defun make-equation (lambda-equation color thickness &optional (resolution 100))
