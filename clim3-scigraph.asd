@@ -8,4 +8,6 @@
    (:file "graph")
    (:file "equation")
    (:file "plot")
+   (:file "commands")
+   (:file "view")
    (:file "example")))
