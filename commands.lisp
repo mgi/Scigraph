@@ -28,6 +28,13 @@
       (setf min-x (+ min-x amount)
             max-x (+ max-x amount)))))
 
+(defun center (plot)
+  (with-accessors ((min-x plot-xmin)
+                   (max-x plot-xmax)) plot
+    (let ((dx (- max-x min-x)))
+      (setf min-x (- (/ dx 2))
+            max-x (/ dx 2)))))
+
 (defclass scigraph-command-processor (clim3:command-table) ())
 
 (defmethod clim3:submit-keystroke ((key-processor scigraph-command-processor) keystroke)
@@ -36,6 +43,7 @@
     (#\- (zoom *plot* nil))
     (#\f (forward *plot* 10))
     (#\b (forward *plot* -10))
+    (#\. (center *plot*))
     (#\q (throw :quit nil))))
 
 (defun make-command-processor ()
