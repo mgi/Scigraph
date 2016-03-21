@@ -28,19 +28,16 @@
                    (setf last-in nil))
                  (setf last-out sp))))))))
 
-(defclass plot (clim3:monochrome)
-  ((%graphs :initform nil :initarg :graphs :accessor plot-graphs)
-   (%xmin :initarg :xmin :accessor plot-xmin)
+(defclass plot (clim3:pile)
+  ((%xmin :initarg :xmin :accessor plot-xmin)
    (%xmax :initarg :xmax :accessor plot-xmax)
    (%ymin :initarg :ymin :accessor plot-ymin)
-   (%ymax :initarg :ymax :accessor plot-ymax))
-  (:default-initargs :hsprawl (clim3-sprawl:sprawl 800 800 nil)
-		     :vsprawl (clim3-sprawl:sprawl 600 600 nil)))
+   (%ymax :initarg :ymax :accessor plot-ymax)))
 
 (defmethod clim3-ext:paint ((zone plot))
   (with-accessors ((width clim3:width)
                    (height clim3:height)
-                   (graphs plot-graphs)
+                   (graphs clim3:children)
                    (min-x plot-xmin)
                    (max-x plot-xmax)
                    (min-y plot-ymin)
@@ -51,7 +48,10 @@
                        (thickness thickness)) graph
         (clim3:with-area (0 0 width height)
           (clim3:paint-paths (list (clip-scale data min-x max-x min-y max-y width height))
-                            color thickness))))))
+                             color thickness))))))
+
+(defmethod (setf plot-xmax) :after (value (zone plot))
+  (format t "~d~%" value))
 
 (defun make-plot (xmin xmax ymin ymax)
   (make-instance 'plot :xmin xmin
@@ -62,7 +62,7 @@
 (defgeneric push-graph (plot graph))
 
 (defmethod push-graph (plot (graph graph))
-  (with-accessors ((graphs plot-graphs)) plot
+  (with-accessors ((graphs clim3:children)) plot
     (push graph graphs)))
 
 (defmethod push-graph :after (plot (graph equation))
@@ -70,7 +70,7 @@
   (update-data graph))
 
 (defun pop-graph (plot)
-  (with-accessors ((graphs plot-graphs)) plot
+  (with-accessors ((graphs clim3:children)) plot
     (pop graphs)))
 
 (defclass grid-plot (plot)

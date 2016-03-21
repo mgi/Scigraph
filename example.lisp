@@ -18,7 +18,6 @@
       (setf (nth i res) (cons x y)))
     res))
 
-
 (defvar *plot*)
 
 (defclass scigraph (clim3:application)
@@ -32,7 +31,6 @@
          (graph-3 (make-equation '(lambda (x) (sin x)) (clim3:make-color 1 0 0) 1.5))
          (graph-4 (make-graph *exp* (clim3:make-color 0 0.5 0) 1))
          (*plot* (make-grid-plot (- (* 2 pi)) (* 2 pi) -1.5 1.5 (/ pi 4) .2))
-         (pz (make-instance 'path-zone))
          (root (clim3:vbox* title *plot*))
          (view (make-instance 'view :command-key-processor (make-command-processor)))
          (clim3:*application* (make-instance 'scigraph :current-view view)))
