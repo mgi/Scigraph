@@ -34,8 +34,8 @@
   (case (car keystroke)
     (#\+ (zoom *plot*))
     (#\- (zoom *plot* nil))
-    ((#\f :control) (forward *plot* 10))
-    ((#\b :control) (forward *plot* -10))
+    (#\f (forward *plot* 10))
+    (#\b (forward *plot* -10))
     (#\q (throw :quit nil))))
 
 (defun make-command-processor ()

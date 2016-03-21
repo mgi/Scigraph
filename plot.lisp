@@ -51,7 +51,8 @@
                              color thickness))))))
 
 (defmethod (setf plot-xmax) :after (value (zone plot))
-  (format t "~d~%" value))
+  (with-accessors ((graphs clim3:children)) zone
+      (dolist (graph graphs) (update-data graph))))
 
 (defun make-plot (xmin xmax ymin ymax)
   (make-instance 'plot :xmin xmin

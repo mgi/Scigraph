@@ -20,3 +20,6 @@
                                           :fill-pointer t
                                           :initial-contents data)
                         :color color :thickness thickness))
+
+(defgeneric update-data (object))
+(defmethod update-data ((self raw-graph)))
