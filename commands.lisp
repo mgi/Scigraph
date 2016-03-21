@@ -1,9 +1,7 @@
 (in-package :clim3-scigraph)
 
 (defun zoom (plot &optional (in-p t))
-  (with-accessors ((width clim3:width)
-                   (height clim3:height)
-                   (min-x plot-xmin)
+  (with-accessors ((min-x plot-xmin)
                    (max-x plot-xmax)
                    (min-y plot-ymin)
                    (max-y plot-ymax)) plot
@@ -22,12 +20,22 @@
             min-y new-min-y
             max-y new-max-y))))
 
+(defun forward (plot percent)
+  (with-accessors ((min-x plot-xmin)
+                   (max-x plot-xmax)) plot
+    (let* ((dx (- max-x min-x))
+           (amount (* dx (/ percent 100))))
+      (setf min-x (+ min-x amount)
+            max-x (+ max-x amount)))))
+
 (defclass scigraph-command-processor (clim3:command-table) ())
 
 (defmethod clim3:submit-keystroke ((key-processor scigraph-command-processor) keystroke)
   (case (car keystroke)
     (#\+ (zoom *plot*))
     (#\- (zoom *plot* nil))
+    ((#\f :control) (forward *plot* 10))
+    ((#\b :control) (forward *plot* -10))
     (#\q (throw :quit nil))))
 
 (defun make-command-processor ()
