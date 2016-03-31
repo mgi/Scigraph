@@ -60,13 +60,13 @@
                        :ymin ymin
                        :ymax ymax))
 
-(defgeneric push-graph (plot graph))
+(defgeneric push-graph (graph plot))
 
-(defmethod push-graph (plot (graph graph))
+(defmethod push-graph ((graph graph) plot)
   (with-accessors ((graphs clim3:children)) plot
     (push graph graphs)))
 
-(defmethod push-graph :after (plot (graph equation))
+(defmethod push-graph :after ((graph equation) plot)
   (setf (plot graph) plot)
   (update-data graph))
 
