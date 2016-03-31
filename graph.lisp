@@ -14,12 +14,38 @@
 
 (defclass graph (raw-graph graph-style-mixin simple-statistics-mixin) ())
 
+(defun xy-form-p (list)
+  (loop for e in list always (consp e)))
+
+(defun y-form-p (list)
+  (loop for e in list always (numberp e)))
+
+(defun to-xy-form (list)
+  (cond ((xy-form-p list) list)
+        ((y-form-p list) (loop for x from 0
+                               for y in list
+                               collect (cons x y)))
+        (t (error "~a is not a valid data form" list))))
+
 (defun make-graph (data color thickness)
-  (make-instance 'graph :data (make-array (length data)
-                                          :adjustable t
-                                          :fill-pointer t
-                                          :initial-contents data)
-                        :color color :thickness thickness))
+  (let ((data (to-xy-form data)))
+    (make-instance 'graph :data (make-array (length data)
+                                            :adjustable t
+                                            :fill-pointer t
+                                            :initial-contents data)
+                          :color color :thickness thickness)))
+
+(defgeneric min-max (object)
+  (:documentation "Returns min-x max-x min-y max-y of a graph"))
+
+(defmethod min-max ((self raw-graph))
+  (with-accessors ((data data)) self
+    (loop for point across data
+          minimize (car point) into min-x
+          minimize (cdr point) into min-y
+          maximize (car point) into max-x
+          maximize (cdr point) into max-y
+          finally (return (values min-x max-x min-y max-y)))))
 
 (defgeneric update-data (object))
 (defmethod update-data ((self raw-graph)))
