@@ -106,22 +106,18 @@
                                   `(((,min-x . 0) (,max-x . 0))
                                     ((0 . ,min-y) (0 . ,max-y)))))
             grid)
-        ;; ]0 .. x-max]
-        (do ((x step-x (+ x step-x)))
-            ((> x max-x))
-          (push (list (cons x min-y) (cons x max-y)) grid))
-        ;; ]0 .. x-min]
-        (do ((x (- step-x) (- x step-x)))
-            ((< x min-x))
-          (push (list (cons x min-y) (cons x max-y)) grid))
-        ;; ]0 .. y-max]
-        (do ((y step-y (+ y step-y)))
-            ((> y max-y))
-          (push (list (cons min-x y) (cons max-x y)) grid))
-        ;; ]0 .. y-min]
-        (do ((y (- step-y) (- y step-y)))
-            ((< y min-y))
-          (push (list (cons min-x y) (cons max-x y)) grid))
+        ;; verticals above zero
+        (loop for x from (max step-x (* step-x (truncate min-x step-x))) to max-x by step-x
+              do (push (list (cons x min-y) (cons x max-y)) grid))
+        ;; verticals below zero
+        (loop for x from (min (- step-x) (* step-x (truncate max-x step-x))) downto min-x by step-x
+              do (push (list (cons x min-y) (cons x max-y)) grid))
+        ;; horizontals above zero
+        (loop for y from (max step-y (* step-y (truncate min-y step-y))) to max-y by step-y
+              do (push (list (cons min-x y) (cons max-x y)) grid))
+        ;; horizontals below zero
+        (loop for y from (min (- step-y) (* step-y (truncate max-y step-y))) downto min-y by step-y
+              do (push (list (cons min-x y) (cons max-x y)) grid))
         (setf grid (map-clip-scale min-x max-x min-y max-y width height grid))
         (clim3:paint-paths axes color 1.5)
         (clim3:paint-paths grid color 0.5)))))
