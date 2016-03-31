@@ -27,7 +27,7 @@
                                collect (cons x y)))
         (t (error "~a is not a valid data form" list))))
 
-(defun make-graph (data color thickness)
+(defun make-graph (data &optional (color (clim3:make-color 0 0 0)) (thickness 1))
   (let ((data (to-xy-form data)))
     (make-instance 'graph :data (make-array (length data)
                                             :adjustable t

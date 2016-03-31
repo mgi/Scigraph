@@ -28,6 +28,11 @@
                    (setf last-in nil))
                  (setf last-out sp))))))))
 
+(defun map-clip-scale (min-x max-x min-y max-y width height list)
+  (loop for e in list
+        when (clip-scale e min-x max-x min-y max-y width height)
+          collect it))
+
 (defclass plot (clim3:pile)
   ((%xmin :initarg :xmin :accessor plot-xmin)
    (%xmax :initarg :xmax :accessor plot-xmax)
@@ -42,13 +47,13 @@
                    (max-x plot-xmax)
                    (min-y plot-ymin)
                    (max-y plot-ymax)) zone
-    (dolist (graph graphs)
-      (with-accessors ((data data)
-                       (color color)
-                       (thickness thickness)) graph
-        (clim3:with-area (0 0 width height)
-          (clim3:paint-paths (list (clip-scale data min-x max-x min-y max-y width height))
-                             color thickness))))))
+    (clim3:with-area (0 0 width height)
+      (dolist (graph graphs)
+        (with-accessors ((data data)
+                         (color color)
+                         (thickness thickness)) graph
+          (let ((scaled (clip-scale data min-x max-x min-y max-y width height)))
+            (clim3:paint-paths (list scaled) color thickness)))))))
 
 (defmethod (setf plot-xmax) :after (value (zone plot))
   (with-accessors ((graphs clim3:children)) zone
@@ -96,35 +101,27 @@
                    (step-x grid-plot-step-x)
                    (step-y grid-plot-step-y)) zone
     (clim3:with-area (0 0 width height)
-      (let* ((dw (/ width (- max-x min-x)))
-             (dh (/ height (- min-y max-y)))
-             (color (clim3:make-color 0.2 0.2 0.2))
-             (sx0 (scale 0 min-x dw))
-             (sy0 (scale 0 max-y dh))
-             (axes (list (list (cons sx0 0)
-                               (cons sx0 height))
-                         (list (cons 0 sy0)
-                               (cons width sy0))))
-             grid)
+      (let ((color (clim3:make-color 0.2 0.2 0.2))
+            (axes (map-clip-scale min-x max-x min-y max-y width height
+                                  `(((,min-x . 0) (,max-x . 0))
+                                    ((0 . ,min-y) (0 . ,max-y)))))
+            grid)
         ;; ]0 .. x-max]
         (do ((x step-x (+ x step-x)))
             ((> x max-x))
-          (let ((sx (scale x min-x dw)))
-            (push (list (cons sx 0) (cons sx height)) grid)))
+          (push (list (cons x min-y) (cons x max-y)) grid))
         ;; ]0 .. x-min]
         (do ((x (- step-x) (- x step-x)))
             ((< x min-x))
-          (let ((sx (scale x min-x dw)))
-            (push (list (cons sx 0) (cons sx height)) grid)))
+          (push (list (cons x min-y) (cons x max-y)) grid))
         ;; ]0 .. y-max]
         (do ((y step-y (+ y step-y)))
             ((> y max-y))
-          (let ((sy (scale y max-y dh)))
-            (push (list (cons 0 sy) (cons width sy)) grid)))
+          (push (list (cons min-x y) (cons max-x y)) grid))
         ;; ]0 .. y-min]
         (do ((y (- step-y) (- y step-y)))
             ((< y min-y))
-          (let ((sy (scale y max-y dh)))
-            (push (list (cons 0 sy) (cons width sy)) grid)))
+          (push (list (cons min-x y) (cons max-x y)) grid))
+        (setf grid (map-clip-scale min-x max-x min-y max-y width height grid))
         (clim3:paint-paths axes color 1.5)
         (clim3:paint-paths grid color 0.5)))))
